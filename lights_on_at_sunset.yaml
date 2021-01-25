@@ -41,11 +41,10 @@ trigger:
   #entity_id: sun.sun
   # We only need to act once the sun drops fully below the horizon, so looking for it to change to this state
   #to: below_horizon
- trigger:
-    platform: numeric_state
-    entity_id: sun.sun
-    value_template: '{{ state_attr(''sun.sun'', ''elevation'') }}'
-    below: -3.0
+  platform: numeric_state
+  entity_id: sun.sun
+  value_template: '{{ state_attr(''sun.sun'', ''elevation'') }}'
+  below: -3.0
 
 # This section will take action on the lights, and turn them on
 action:
