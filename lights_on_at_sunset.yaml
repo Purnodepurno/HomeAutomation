@@ -1,3 +1,4 @@
+# original found on https://gist.github.com/CyanAutomation/1b8bafd033f73e3c24e42e8f381ff906
 blueprint:
   name: Lights On At Sunset
   description: Turn on the following lights shortly after sunset
