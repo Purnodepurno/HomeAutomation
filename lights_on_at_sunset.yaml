@@ -40,7 +40,7 @@ trigger:
   platform: numeric_state
   entity_id: sun.sun
   value_template: '{{ state_attr(''sun.sun'', ''elevation'') }}'
-  below: -3.0
+  below: -6
 
 # This section will take action on the lights, and turn them on
 action:
