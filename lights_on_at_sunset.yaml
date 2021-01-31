@@ -17,7 +17,7 @@ blueprint:
     target_brightness:
       name: Brightness
       description: Brightness of the light(s) when they're activated
-      default: 50
+      default: 40
       # Use a selector, to set the brightness
       selector:
         number:
