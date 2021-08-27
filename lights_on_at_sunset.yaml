@@ -26,7 +26,12 @@ blueprint:
           mode: slider
           step: 5
           unit_of_measurement: "%"
-
+   switch:
+      name: Switch
+      selector:
+        target:
+          entity:
+            domain: switch
 # Prevent the automation from running concurrently
 mode: single
 
