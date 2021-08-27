@@ -26,7 +26,7 @@ blueprint:
           mode: slider
           step: 5
           unit_of_measurement: "%"
-   switch:
+    switch:
       name: Switch
       selector:
         target:
