@@ -1,6 +1,6 @@
 blueprint:
-  name: Z2M - IKEA STYRBAR 4-button remote
-  description: "This blueprint is for the IKEA STYRBAR square, 4-button remote when used with zigbee2mqtt.
+  name: ZHA - IKEA STYRBAR 4-button remote
+  description: "This blueprint is for the IKEA STYRBAR square, 4-button remote when used with zha.
   It is for general use so all buttons can be connected to any action of your choice"
   domain: automation
   input:
@@ -9,7 +9,7 @@ blueprint:
       description: IKEA STYRBAR remote to use
       selector:
         entity:
-          integration: mqtt
+          integration: zha
           domain: sensor
     button_on:
       name: Brightness up button - short press
