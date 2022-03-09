@@ -1,122 +1,141 @@
 blueprint:
-  name: ZHA - IKEA STYRBAR 4-button remote
-  description: "This blueprint is for the IKEA STYRBAR square, 4-button remote when used with zha.
-  It is for general use so all buttons can be connected to any action of your choice"
+  name: Ikea Styrbar Remote
+  description: Control your lights with the IKEA STYRBAR remote. You can also set
+    actions for the left and right button.
   domain: automation
   input:
     remote:
       name: Remote
-      description: IKEA STYRBAR remote to use
+      description: IKEA Styrbar remote to use
       selector:
-        entity:
+        device:
           integration: zha
-          domain: sensor
-    button_on:
-      name: Brightness up button - short press
-      description: Action to run when SHORT press on brighness UP button
+          manufacturer: IKEA of Sweden
+          entity:
+            domain: sensor
+    target_light:
+      name: Lights
+      description: The lights you want to control with the remote
+      selector:
+        target:
+          entity:
+            domain: light
+    button_left:
+      name: Left button
+      description: Action to run on left button press short
       default: []
       selector:
         action: {}
-    button_off:
-      name: Brightness down button - short press
-      description: Action to run when SHORT press on brighness DOWN button
-      default: []
-      selector:
-        action: {}
-    button_brightness_move_up:
-      name: Brightness up button - long press
-      description: Action to run when LONG press on brighness UP button
-      default: []
-      selector:
-        action: {}
-    button_brightness_move_down:
-      name: Brightness down button - long press
-      description: Action to run when LONG press on brighness DOWN button
-      default: []
-      selector:
-        action: {}
-    button_brightness_stop:
-      name: Brightness stop button - long release press
-      description: Action to run when LONG press on brighness (up or down) is released
-      default: []
-      selector:
-        action: {}
-    button_left_click:
-      name: Left button - short press
-      description: Action to run when SHORT press on LEFT arrow button
+    button_right:
+      name: Right button
+      description: Action to run on right button press short
       default: []
       selector:
         action: {}
     button_left_hold:
-      name: Left button - hold
-      description: Action to run when HOLD press on LEFT arrow button
-      default: []
-      selector:
-        action: {}
-    button_left_release:
-      name: Left button - release
-      description: Action to run when RELEASE press on LEFT arrow button
-      default: []
-      selector:
-        action: {}       
-    button_right_click:
-      name: Right button - short press
-      description: Action to run when SHORT press on RIGHT arrow button
+      name: Left button hold
+      description: Action to run on left button press long,
+        action is stopped when button is released.
       default: []
       selector:
         action: {}
     button_right_hold:
-      name: Right button - hold
-      description: Action to run when HOLD press on RIGHT button
+      name: Right button hold
+      description: Action to run on right button press long,
+        action is stopped when button is released.
       default: []
       selector:
         action: {}
-    button_right_release:
-      name: Right button - release
-      description: Action to run when RELEASE press on RIGHT arrow button
-      default: []
+    brightness:
+      name: Brightness
+      description: The brightness you want your lights to be when turning them on
+      default: 100
       selector:
-        action: {}   
+        number:
+          min: 0.0
+          max: 100.0
+          mode: slider
+          step: 1.0
+          unit_of_measurement: '%'
+    force_brightness:
+      name: Force Brightness
+      description: Force the above set brightness when turning on the lamps?
+      default: false
+      selector:
+        boolean: {}
+  source_url: https://raw.githubusercontent.com/Computerfreak14/Z2M-Styrbar-remote-blueprint/experimental-ZHA/Z2M-IKEA-STYRBAR-remote.yaml
+trigger:
+- platform: event
+  event_type: zha_event
+  event_data:
+    device_id: !input 'remote'
+action:
+- variables:
+    command: '{{ trigger.event.data.command }}'
+    dataargs: '{{ trigger.event.data.args }}'
+- choose:
+  - conditions: '{{ command == ''on'' }}'
+    sequence:
+    - choose:
+      - conditions: '{{ force_brightness }}'
+        sequence:
+        - service: light.turn_on
+          target: !input 'target_light'
+          data:
+            transition: 1
+            brightness_pct: !input 'brightness'
+      default:
+      - service: light.turn_on
+        target: !input 'target_light'
+        data:
+          transition: 1
+  - conditions: '{{ command == ''off'' }}'
+    sequence:
+    - service: light.turn_off
+      target: !input 'target_light'
+  - conditions: '{{ command == ''move'' }}'
+    sequence:
+    - repeat:
+        until: '{{ command == ''stop'' }}'
+        sequence:
+        - service: light.turn_on
+          data:
+            brightness_step_pct: -10
+            transition: 1
+          target: !input 'target_light'
+        - delay: '1'
+  - conditions: '{{ command == ''move_with_on_off'' }}'
+    sequence:
+    - repeat:
+        until: '{{ command == ''stop'' }}'
+        sequence:
+        - service: light.turn_on
+          data:
+            brightness_step_pct: 10
+            transition: 1
+          target: !input 'target_light'
+        - delay: '1'
+  - conditions:
+    - '{{ command == ''press'' }}'
+    - '{{ dataargs[0] == 257 }}'
+    sequence: !input 'button_left'
+  - conditions:
+    - '{{ command == ''press'' }}'
+    - '{{ dataargs[0] == 256 }}'
+    sequence: !input 'button_right'
+  - conditions:
+    - '{{ command == ''hold'' }}'
+    - '{{ dataargs[0] == 3329 }}'
+    sequence:
+    - repeat:
+        until: '{{ command == ''release'' }}'
+        sequence: !input 'button_left_hold'
+  - conditions:
+    - '{{ command == ''hold'' }}'
+    - '{{ dataargs[0] == 3328 }}'
+    sequence:
+    - repeat:
+        until: '{{ command == ''release'' }}'
+        sequence: !input 'button_right_hold'
 mode: restart
 max_exceeded: silent
-trigger:
-  - platform: state
-    entity_id: !input "remote"
-    attribute: action
-action:
-  - variables:
-      command: "{{ trigger.to_state.state }}"
-  - choose:
-      - conditions:
-          - "{{ command == 'on' }}"
-        sequence: !input "button_on"
-      - conditions:          
-          - "{{ command == 'off' }}"
-        sequence: !input "button_off"        
-      - conditions:
-          - "{{ command == 'brightness_move_up' }}"
-        sequence: !input "button_brightness_move_up"
-      - conditions:
-          - "{{ command == 'brightness_move_down' }}"
-        sequence: !input "button_brightness_move_down"
-      - conditions:
-          - "{{ command == 'brightness_stop' }}"
-        sequence: !input "button_brightness_stop"
-      - conditions:
-          - "{{ command == 'arrow_left_click' }}"
-        sequence: !input "button_left_click"
-      - conditions:
-          - "{{ command == 'arrow_left_hold' }}"
-        sequence: !input "button_left_hold"
-      - conditions:
-          - "{{ command == 'arrow_left_release' }}"
-        sequence: !input "button_left_release"        
-      - conditions:
-          - "{{ command == 'arrow_right_click' }}"
-        sequence: !input "button_right_click"
-      - conditions:
-          - "{{ command == 'arrow_right_hold' }}"
-        sequence: !input "button_right_hold"
-      - conditions:
-          - "{{ command == 'arrow_right_release' }}"
-        sequence: !input "button_right_release"
